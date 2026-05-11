@@ -1,8 +1,3 @@
-/**
- * Datafy Tracker v1.0
- * Rastreamento server-side para TikTok Ads
- * https://github.com/datafy-analytics/tracker
- */
 (function () {
   'use strict';
 
