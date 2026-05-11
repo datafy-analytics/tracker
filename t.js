@@ -14,15 +14,8 @@
   };
 
   // Resolve API endpoint
-  var dataApi = capturedScript.getAttribute('data-api');
-  if (dataApi) {
-    config.apiEndpoint = dataApi + '/api/t/' + config.token;
-  } else {
-    var src = capturedScript.src || '';
-    var match = src.match(/(.+)\/api\/t\//);
-    if (match) config.apiEndpoint = match[1] + '/api/t/' + config.token;
-    else return;
-  }
+  var dataApi = capturedScript.getAttribute('data-api') || 'https://api.datafy-analytics.com';
+  config.apiEndpoint = dataApi + '/api/t/' + config.token;
 
   if (!config.token) return;
 
