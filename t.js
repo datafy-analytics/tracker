@@ -125,16 +125,24 @@
     prev.add(current);
     sessionStorage.setItem(KEY, JSON.stringify(Array.from(prev.values())));
 
+    console.log('[Datafy] VIEW request:', config.apiEndpoint + '/view', data);
     return fetch(config.apiEndpoint + '/view', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(data),
       signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined,
       keepalive: true
-    }).then(function (r) { return r.json(); }).then(function (result) {
+    }).then(function (r) {
+      console.log('[Datafy] VIEW response status:', r.status);
+      return r.json();
+    }).then(function (result) {
+      console.log('[Datafy] VIEW response:', result);
       if (result.ok && result.leadId) return result.leadId;
       return null;
-    }).catch(function () { return null; });
+    }).catch(function (err) {
+      console.error('[Datafy] VIEW error:', err.message || err);
+      return null;
+    });
   }
 
   var icSent = false;
