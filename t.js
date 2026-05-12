@@ -17,6 +17,10 @@
   config.apiEndpoint = dataApi + '/api/t/' + config.token;
   if (!config.token) return;
 
+  console.log('[Datafy] Tracker v2.0 initialized');
+  console.log('[Datafy] Token:', config.token);
+  console.log('[Datafy] API:', config.apiEndpoint);
+
   var UTM_SOURCE = 'utm_source';
   var SCK = 'sck';
 
@@ -139,6 +143,7 @@
     icSent = true;
     var leadId = storeGet(getLeadKey());
     if (!leadId) { icSent = false; return; }
+    console.log('[Datafy] InitiateCheckout:', leadId);
     var payload = JSON.stringify({ status: 'initiate_checkout', utm_source: leadId, href: window.location.href });
     if (navigator.sendBeacon) {
       navigator.sendBeacon(config.apiEndpoint + '/event', new Blob([payload], { type: 'text/plain' }));
@@ -202,6 +207,7 @@
       document.head.appendChild(s);
       window.addEventListener('__df_fp_ready', function () {
         config.fingerPrintId = window.__df_fp;
+        console.log('[Datafy] FingerprintJS:', config.fingerPrintId ? 'OK' : 'failed');
         fpResolve(config.fingerPrintId);
       });
       setTimeout(function () { fpResolve(undefined); }, 5000);
@@ -216,6 +222,8 @@
     var params = getUrlParameters();
     var clickId = detectClickId(params);
 
+    console.log('[Datafy]', { urlParams: params, clickId: clickId, storedLeadId: leadId, detectedPlatform: clickId ? 'yes' : 'no' });
+
     if (clickId) {
       storeSet(getTtclidKey(), clickId);
       setCookie('_df_ttclid', clickId, 30);
@@ -223,6 +231,7 @@
 
     // New click + no stored lead = send to backend, backend generates leadId
     if (clickId && !leadId) {
+      console.log('[Datafy] New click detected, requesting leadId from backend...');
       var urlParamsString = new URLSearchParams(params).toString();
       var data = {
         step_id: config.stepId,
@@ -235,16 +244,20 @@
       };
       var newLeadId = await dispatch(data);
       if (newLeadId) {
+        console.log('[Datafy] Lead created:', newLeadId);
         storeSet(getLeadKey(), newLeadId);
         setCookie('_df_lid', newLeadId, 365);
         updateUrlWithLeadId(newLeadId);
         updateAllLinks(newLeadId);
         updateIframes(newLeadId);
+      } else {
+        console.warn('[Datafy] Failed to create lead');
       }
       return;
     }
 
     if (clickId && leadId) {
+      console.log('[Datafy] Click detected, using existing leadId:', leadId);
       updateUrlWithLeadId(leadId);
       updateAllLinks(leadId);
       updateIframes(leadId);
@@ -252,11 +265,14 @@
     }
 
     if (leadId) {
+      console.log('[Datafy] Restoring leadId from storage:', leadId);
       updateUrlWithLeadId(leadId);
       updateAllLinks(leadId);
       updateIframes(leadId);
       return;
     }
+
+    console.log('[Datafy] No tracking data available');
   }
 
   function initWatch() {
@@ -348,6 +364,7 @@
   onLoad(initAdvancedTracking);
   onLoad(initWatch);
   onLoad(initNavigationInterception);
+  onLoad(function () { console.log('[Datafy] All modules loaded'); });
 
   var origPush = history.pushState;
   var origReplace = history.replaceState;
